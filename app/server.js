@@ -31,6 +31,8 @@ app.get('/', async (req, res) => {
       <p><code>${ip}</code></p>
 
       <h2>Your IP Address Details</h2>
+      <h3>Pakistan Zindabaad</h3>
+
       <pre>${JSON.stringify(data, null, 2)}</pre>
     `);
 

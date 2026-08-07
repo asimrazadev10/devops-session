@@ -2,28 +2,31 @@ name: Deploy-to-EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
 
-        - name: Setup SSH
-          run: |
-            mkdir -p ~/.ssh
-            echo "${{ secrets.SSH_SECRET_KEY }}" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
-            ssh-keyscan -H ${{ variables.HOST_NAME }} >> ~/.ssh/known_hosts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Deploy to EC2
-          run: |
-            ssh ${{ variables.SSH_USERNAME }}@${{ variables.HOST_NAME }} << 'EOF'
-              set -e
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_SECRET_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ vars.HOST_NAME }} >> ~/.ssh/known_hosts
 
-              cd /home/ubuntu/devops_session
+      - name: Deploy to EC2
+        run: |
+          ssh ${{ vars.SSH_USERNAME }}@${{ vars.HOST_NAME }} << 'EOF'
+            set -e
 
-              git fetch origin
-              git reset --hard origin/main
+            cd /home/ubuntu/devops_session
+
+            git fetch origin
+            git reset --hard origin/main
+          EOF

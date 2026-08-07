@@ -1,26 +1,44 @@
 const express = require('express');
 const app = express();
 
-// Request log to stdout. On the VPS, pm2/systemd/journald captures stdout,
-// so that IS your log file + rotation — no logging library needed.
-// ponytail: swap for morgan/pino only if you need structured/JSON logs.
-app.use((req, res, next) => {
-  res.on('finish', () => {
-    console.log(`${new Date().toISOString()} ${req.ip} ${req.method} ${req.url} -> ${res.statusCode}`);
-  });
-  next();
-});
+app.set('trust proxy', true); // if behind a reverse proxy
 
-// Direct-to-internet: req.ip is the real TCP peer, so no `trust proxy`.
-// ponytail: the IP is the socket address (always a valid IP string), not a
-// user-supplied header, so no escaping needed. Add `trust proxy` + escaping
-// if you ever put nginx/Cloudflare in front.
-app.get('/', (req, res) => {
-  res.send(`<!doctype html><meta charset=utf-8><title>Your IP</title>
-<style>body{font:16px system-ui;display:grid;place-content:center;height:100vh;margin:0;text-align:center}
-code{font-size:2rem}</style>
-<p>Your IP address is</p><code>${req.ip}</code>`);
+app.get('/', async (req, res) => {
+  const ip = req.ip;
+
+  try {
+    const lambdaRes = await fetch(
+      `https://vfomlqpkcfvtxxqcukwbzbqite0pjmhz.lambda-url.ap-southeast-1.on.aws/?ip=${encodeURIComponent(ip)}`
+    );
+
+    if (!lambdaRes.ok) {
+      throw new Error(`Lambda returned ${lambdaRes.status}`);
+    }
+
+    // If your Lambda returns JSON:
+    const data = await lambdaRes.json();
+
+    res.send(`
+      <!doctype html>
+      <meta charset="utf-8">
+      <title>IP Information</title>
+      <style>
+        body { font:16px system-ui; max-width:800px; margin:40px auto; padding:20px; }
+        pre { background:#f5f5f5; padding:16px; border-radius:8px; }
+      </style>
+
+      <h2>Your IP</h2>
+      <p><code>${ip}</code></p>
+
+      <h2>You Ip Address Details/h2>
+      <pre>${JSON.stringify(data, null, 2)}</pre>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`Error calling Lambda: ${err.message}`);
+  }
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`listening on :${port}`));
+app.listen(port, () => console.log(`Listening on :${port}`));

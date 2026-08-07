@@ -1,4 +1,4 @@
-name: Hello-World
+name: Deploy-to-EC2
 
 on:
   push:
@@ -7,7 +7,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-    steps:
-      - name: Hello World
-        run: echo "Hello, World!"
+        - name: Setup SSH
+          run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SSH_SECRET_KEY }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan -H ${{ variables.HOST_NAME }} >> ~/.ssh/known_hosts
+
+        - name: Deploy to EC2
+          run: |
+            ssh ${{ variables.SSH_USERNAME }}@${{ variables.HOST_NAME }} << 'EOF'
+              set -e
+
+              cd /home/ubuntu/devops_session
+
+              git fetch origin
+              git reset --hard origin/main

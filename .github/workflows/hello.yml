@@ -25,7 +25,7 @@ jobs:
           ssh ${{ vars.SSH_USERNAME }}@${{ vars.HOST_NAME }} << 'EOF'
             set -e
 
-            cd /home/ubuntu/devops_session
+            cd /home/ubuntu/devops-session
 
             git fetch origin
             git reset --hard origin/main

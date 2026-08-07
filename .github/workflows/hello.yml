@@ -30,3 +30,8 @@ jobs:
             git fetch origin
             git reset --hard origin/main
           EOF
+      - name: Install npm packages
+        run: npm Install
+      
+      - name: Restart PM2
+        run: pm2 restart all

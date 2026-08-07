@@ -30,7 +30,7 @@ app.get('/', async (req, res) => {
       <h2>Your IP</h2>
       <p><code>${ip}</code></p>
 
-      <h2>You Ip Address Details/h2>
+      <h2>Your IP Address Details</h2>
       <pre>${JSON.stringify(data, null, 2)}</pre>
     `);
 
